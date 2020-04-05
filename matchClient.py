@@ -25,17 +25,15 @@ class matchClient:
         self.wins = int(win)
         self.loss = int(loss)
         self.points = int(point)
+        self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 
     def connect(self):
-        self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         message = {"cmd": "connect", "user_id": self.user_id}
+        self.is_connected = True
         self.sendToServer(message)
-        _thread.start_new_thread(self.gameLoop, ())
-        is_connected = True
 
     def disconnect(self):
-        self.sock = None
-        is_connected = False
+        self.is_connected = False
 
     def askNewGame(self):
         message = {"cmd": "newGame", "user_id": str(self.user_id), "point": str(self.points)}
@@ -47,17 +45,11 @@ class matchClient:
             print(self.user_id + " send to server : " + str(m))
             self.sock.sendto(bytes(m, 'utf8'), server_address)
 
-    def receivedFromServer(self, data):
-        data, addr = sock.recvfrom(1024)
-        print(data, addr)
-        data = ast.literal_eval(data.decode('utf-8'))
-        print(data)
-
     def gameLoop(self):
-        if self.sock != None:
+        if self.sock != None and self.is_connected == True:
             data, addr = self.sock.recvfrom(1024)
-            print(self.user_id + " received from server : " + str(data))
             data = json.loads(data.decode('utf-8'))
+            print(self.user_id + " received from server : " + str(data))
             if 'cmd' in data:
                 cmd = data['cmd']
                 if cmd == 'connected':
@@ -65,11 +57,11 @@ class matchClient:
                 elif cmd == 'waiting':
                     pass
                 elif cmd == 'result':
-                    self.is_connected = False
                     pass
+                elif cmd == 'disconnected':
+                    self.disconnect()
                 elif cmd == 'error':
                     print('error : ' + data['message'])
-
 
 def main():
     user_id = 'Bo'
@@ -80,6 +72,7 @@ def main():
     client.connect()
     client.askNewGame()
     while True:
+        client.gameLoop()
         time.sleep(1)
 
 

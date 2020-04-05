@@ -19,9 +19,9 @@ def gameLoop():
     while True:
         if (len(clients_pool) > 0):
             c = clients_pool.pop()
-            clients_playing.append(c)
             c.connect()
             c.askNewGame()
+            clients_playing.append(c)
         time.sleep(1)
 
 
@@ -30,7 +30,9 @@ def cleanup():
         disconnected = []
         for i in range(len(clients_playing)):
             c = clients_playing[i]
+            c.gameLoop()
             if c.is_connected == False:
+                print(c.user_id + " disconnected" )
                 disconnected.append(c)
 
         if len(disconnected) > 0:
