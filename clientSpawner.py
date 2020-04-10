@@ -32,7 +32,6 @@ def cleanup():
             c = clients_playing[i]
             c.gameLoop()
             if c.is_connected == False:
-                print(c.user_id + " disconnected" )
                 disconnected.append(c)
 
         if len(disconnected) > 0:

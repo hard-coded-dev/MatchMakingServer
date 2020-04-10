@@ -57,7 +57,13 @@ class matchClient:
                 elif cmd == 'waiting':
                     pass
                 elif cmd == 'result':
-                    pass
+                    if 'ranks' in data:
+                        ranks = data['ranks']
+                        rank = ranks.index( self.user_id )
+                        if rank >= 0:
+                            point = data['user_points'][rank]
+                            prev_point = data['user_previous_points'][rank]
+                            print( "%s rank at %d, points changed from %d to %d" % ( self.user_id, rank, prev_point, point) )
                 elif cmd == 'disconnected':
                     self.disconnect()
                 elif cmd == 'error':

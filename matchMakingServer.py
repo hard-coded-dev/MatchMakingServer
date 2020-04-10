@@ -13,15 +13,17 @@ connected = 0
 
 maxHealth = 100
 numPlayersInGame = 3
-numUpdatePerSeconds = 10
+maxMatchedGame = 3
+curMatchedGame = 0
 clients = {}
 clients_in_queue = []
 clients_in_removed = []
+game_id = 0
 
 players = {}
 
 api_get_players = "https://10gcbr5ugl.execute-api.us-east-1.amazonaws.com/default/get_players"
-
+api_play_game = "https://dsp56r4abi.execute-api.us-east-1.amazonaws.com/default/play_game"
 
 
 def sendToClient(sock, address, message):
@@ -71,24 +73,31 @@ def connectionLoop(sock):
                     sendToClient(sock, addr, msg)
 
 def playGame(sock, clients):
+    global game_id
     # random winner
-    random.shuffle(clients)
-    print(clients)
-    rankings = [data['player']['user_id'] for addr, data in clients]
-    msg = {"cmd": "result", "ranking": str(rankings)}
+    user_ids = [data['player']['user_id'] for addr, data in clients]
+    print(user_ids)
+    r = requests.post(url=api_play_game, data = json.dumps( { "user_ids" : user_ids } ) )
+    data = json.loads(r.text)
+    print(data)
     for addr, client in clients:
-        sendToClient(sock, addr, msg)
+        sendToClient(sock, addr, data)
+
 
 def gameLoop(sock):
     global clients_in_queue
     global clients_in_removed
+    global curMatchedGame
+    global maxMatchedGame
     while True:
-        if len(clients_in_queue) > numPlayersInGame:
-            # no matchmaking, just linear ordering
-            clients_in_playing = clients_in_queue[0:numPlayersInGame]
-            playGame(sock, clients_in_playing)
-            clients_in_removed.extend( clients_in_playing )
-            clients_in_queue = clients_in_queue[numPlayersInGame:]
+        if curMatchedGame < maxMatchedGame:
+            if len(clients_in_queue) > numPlayersInGame:
+                # no matchmaking, just linear ordering
+                clients_in_playing = clients_in_queue[0:numPlayersInGame]
+                playGame(sock, clients_in_playing)
+                clients_in_removed.extend( clients_in_playing )
+                clients_in_queue = clients_in_queue[numPlayersInGame:]
+                curMatchedGame += 1
 
 def cleanClients(sock):
     global clients_in_removed
