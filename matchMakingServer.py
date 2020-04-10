@@ -13,7 +13,7 @@ connected = 0
 
 maxHealth = 100
 numPlayersInGame = 3
-maxMatchedGame = 3
+maxMatchedGame = 20
 curMatchedGame = 0
 clients = {}
 clients_in_queue = []
